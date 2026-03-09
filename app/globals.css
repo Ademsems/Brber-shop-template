@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Variables ─────────────────────────────────────────────────────────── */
+:root {
+  --navy:  #0A192F;
+  --aqua:  #00FFFF;
+  --slate: #8892B0;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--navy);
+    color: #CCD6F6;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  ::selection {
+    background-color: rgba(0, 255, 255, 0.25);
+    color: #fff;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.2); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,255,255,0.45); }
+
+  /* Date input styling */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.6) sepia(1) saturate(5) hue-rotate(155deg);
+    cursor: pointer;
+  }
+}
+
+/* ── Utilities ─────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .font-display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.02em; }
+  .text-navy     { color: var(--navy);  }
+  .text-aqua     { color: var(--aqua);  }
+  .text-slate    { color: var(--slate); }
+  .bg-navy       { background-color: var(--navy); }
+  .bg-aqua       { background-color: var(--aqua); }
+
+  /* Aqua glow text */
+  .text-glow-aqua {
+    text-shadow: 0 0 20px rgba(0,255,255,0.6), 0 0 60px rgba(0,255,255,0.3);
+  }
+
+  /* Glass card */
+  .glass {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Noise grain overlay */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  /* Animated gradient border */
+  .border-gradient-aqua {
+    background: linear-gradient(var(--navy), var(--navy)) padding-box,
+                linear-gradient(135deg, rgba(0,255,255,0.4), transparent 60%, rgba(0,255,255,0.1)) border-box;
+    border: 1px solid transparent;
+  }
+}
+
+/* ── Component Overrides ───────────────────────────────────────────────────── */
+@layer components {
+  /* Glow button base */
+  .btn-glow {
+    @apply relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-bold text-sm transition-all duration-200;
+  }
+  .btn-glow::before {
+    content: '';
+    @apply absolute inset-0 rounded-full opacity-0 transition-opacity duration-300;
+    background: radial-gradient(circle at 50% 50%, rgba(0,255,255,0.3), transparent 70%);
+    filter: blur(12px);
+  }
+  .btn-glow:hover::before { @apply opacity-100; }
+
+  /* Section divider line */
+  .divider-aqua {
+    @apply w-12 h-px bg-gradient-to-r from-aqua/60 to-transparent;
+  }
+
+  /* Card hover ring */
+  .card-hover {
+    @apply transition-all duration-300 hover:ring-1 hover:ring-aqua/30 hover:shadow-[0_8px_40px_rgba(0,255,255,0.08)];
+  }
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0,255,255,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(0,255,255,0.6), 0 0 80px rgba(0,255,255,0.2); }
+}
+
+@keyframes scan-line {
+  0%   { top: -2px; }
+  100% { top: 100%; }
+}
+
+.animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
