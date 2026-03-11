@@ -12,10 +12,10 @@ interface NavbarProps {
 
 export default function Navbar({ onBookClick }: NavbarProps) {
   const { lang, setLang, dict, t } = useI18n();
-  const [open, setOpen]       = useState(false);
+  const [open, setOpen]         = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { scrollY }           = useScroll();
-  const btnRef                = useRef<HTMLButtonElement>(null);
+  const { scrollY }             = useScroll();
+  const btnRef                  = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const unsub = scrollY.on("change", (v) => setScrolled(v > 40));
@@ -40,6 +40,17 @@ export default function Navbar({ onBookClick }: NavbarProps) {
     { href: "#contact",  label: t(dict.nav.contact)  },
   ];
 
+  // When not scrolled: white text for dark hero. When scrolled: dark text for white nav bg.
+  const linkBase    = scrolled ? "text-mid hover:text-charcoal"   : "text-white/90 hover:text-white";
+  const logoText    = scrolled ? "text-charcoal"                  : "text-white";
+  const langBtn     = scrolled
+    ? "text-mid hover:text-accent border-black/12 hover:border-accent/40 bg-white/60"
+    : "text-white/80 hover:text-white border-white/30 hover:border-white/60 bg-white/10 backdrop-blur-sm";
+  const bookBtn     = scrolled
+    ? "bg-accent text-white hover:bg-accent-dark hover:shadow-[0_0_24px_rgba(209,0,0,0.45)]"
+    : "bg-white text-accent hover:bg-white/90 hover:shadow-[0_0_24px_rgba(255,255,255,0.3)]";
+  const underline   = scrolled ? "bg-accent" : "bg-white";
+
   return (
     <>
       <motion.nav
@@ -57,12 +68,16 @@ export default function Navbar({ onBookClick }: NavbarProps) {
           {/* Logo */}
           <motion.a href="#" className="flex items-center gap-2.5 group" whileHover={{ scale: 1.02 }}>
             <div className="relative w-8 h-8">
-              <div className="absolute inset-0 rounded-full bg-accent/15 blur-md group-hover:bg-accent/30 transition-all" />
-              <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-accent/30 bg-white shadow-sm">
-                <Scissors size={14} className="text-accent rotate-45" />
+              <div className={`absolute inset-0 rounded-full blur-md transition-all ${
+                scrolled ? "bg-accent/15 group-hover:bg-accent/30" : "bg-white/20 group-hover:bg-white/35"
+              }`} />
+              <div className={`relative flex items-center justify-center w-8 h-8 rounded-full border shadow-sm transition-all ${
+                scrolled ? "border-accent/30 bg-white" : "border-white/40 bg-white/15 backdrop-blur-sm"
+              }`}>
+                <Scissors size={14} className={scrolled ? "text-accent rotate-45" : "text-white rotate-45"} />
               </div>
             </div>
-            <span className="font-display text-xl font-bold tracking-tight text-charcoal">
+            <span className={`font-display text-xl font-bold tracking-tight transition-colors duration-300 ${logoText}`}>
               {SHOP.name}
             </span>
           </motion.a>
@@ -73,10 +88,10 @@ export default function Navbar({ onBookClick }: NavbarProps) {
               <li key={l.href}>
                 <a
                   href={l.href}
-                  className="relative text-sm font-medium text-mid tracking-wide hover:text-charcoal transition-colors group"
+                  className={`relative text-sm font-medium tracking-wide transition-colors duration-300 group ${linkBase}`}
                 >
                   {l.label}
-                  <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300 rounded-full" />
+                  <span className={`absolute -bottom-0.5 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300 rounded-full ${underline}`} />
                 </a>
               </li>
             ))}
@@ -86,7 +101,7 @@ export default function Navbar({ onBookClick }: NavbarProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setLang(lang === "sk" ? "en" : "sk")}
-              className="hidden md:flex items-center gap-1.5 text-xs font-bold text-mid hover:text-accent transition-colors border border-black/12 hover:border-accent/40 rounded-full px-3 py-1.5 bg-white/60"
+              className={`hidden md:flex items-center gap-1.5 text-xs font-bold transition-all duration-300 border rounded-full px-3 py-1.5 ${langBtn}`}
             >
               <Globe size={12} />
               {lang.toUpperCase()}
@@ -97,7 +112,7 @@ export default function Navbar({ onBookClick }: NavbarProps) {
               onMouseMove={handleMagnet}
               onMouseLeave={resetMagnet}
               onClick={onBookClick}
-              className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-accent transition-all duration-300 hover:bg-accent-dark hover:shadow-[0_0_24px_rgba(209,0,0,0.45)] hover:scale-105 active:scale-95"
+              className={`hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-95 ${bookBtn}`}
             >
               <Scissors size={13} />
               {t(dict.nav.book)}
@@ -105,7 +120,7 @@ export default function Navbar({ onBookClick }: NavbarProps) {
 
             <button
               onClick={() => setOpen(!open)}
-              className="md:hidden p-2 text-mid hover:text-charcoal transition-colors"
+              className={`md:hidden p-2 transition-colors ${scrolled ? "text-mid hover:text-charcoal" : "text-white/80 hover:text-white"}`}
               aria-label="Menu"
             >
               {open ? <X size={22} /> : <Menu size={22} />}

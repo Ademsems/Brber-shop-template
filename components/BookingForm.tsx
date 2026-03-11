@@ -106,7 +106,7 @@ export default function BookingForm({ onClose }: Props) {
         exit={{    scale: 0.88, opacity: 0, y: 40 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <div className="relative px-8 pt-8 pb-6 border-b border-black/6 bg-offwhite">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent rounded-t-3xl" />
 
@@ -144,7 +144,7 @@ export default function BookingForm({ onClose }: Props) {
           </p>
         </div>
 
-        {/* Body */}
+        {/* ── Body ── */}
         <div className="px-8 py-6 min-h-[320px] max-h-[65vh] overflow-y-auto bg-white">
           <AnimatePresence mode="wait">
             {done ? (
@@ -182,16 +182,16 @@ export default function BookingForm({ onClose }: Props) {
                 transition={{ duration: 0.25 }}
                 className="flex flex-col gap-5"
               >
-                {/* STEP 1 */}
+                {/* STEP 1 — Personal Info */}
                 {step === 1 && (
                   <>
-                    <Field icon={<User  size={15} />} label={t(bd.fields.name)}  placeholder={t(bd.fields.namePh)}  value={form.name}  onChange={(v) => set("name", v)}  error={error === "name"}  errMsg={t(bd.errors.required)} />
-                    <Field icon={<Mail  size={15} />} label={t(bd.fields.email)} placeholder="name@email.com"         value={form.email} onChange={(v) => set("email", v)} error={error === "email"} errMsg={t(bd.errors.email)} type="email" />
+                    <Field icon={<User  size={15} />} label={t(bd.fields.name)}  placeholder={t(bd.fields.namePh)}  value={form.name}  onChange={(v) => set("name",  v)} error={error === "name"}  errMsg={t(bd.errors.required)} />
+                    <Field icon={<Mail  size={15} />} label={t(bd.fields.email)} placeholder="name@email.com"        value={form.email} onChange={(v) => set("email", v)} error={error === "email"} errMsg={t(bd.errors.email)} type="email" />
                     <Field icon={<Phone size={15} />} label={t(bd.fields.phone)} placeholder={t(bd.fields.phonePh)} value={form.phone} onChange={(v) => set("phone", v)} error={error === "phone"} errMsg={t(bd.errors.required)} type="tel" />
                   </>
                 )}
 
-                {/* STEP 2 */}
+                {/* STEP 2 — Choose Barber */}
                 {step === 2 && (
                   <div className="flex flex-col gap-3">
                     <BarberCard selected={form.barberId === ""} onClick={() => set("barberId", "")} name={t(bd.anyBarber)} role="" isAny />
@@ -201,7 +201,7 @@ export default function BookingForm({ onClose }: Props) {
                   </div>
                 )}
 
-                {/* STEP 3 */}
+                {/* STEP 3 — Select Service */}
                 {step === 3 && (
                   <div className="flex flex-col gap-3">
                     {error === "service" && <p className="text-accent text-xs">{t(bd.errors.required)}</p>}
@@ -211,7 +211,7 @@ export default function BookingForm({ onClose }: Props) {
                   </div>
                 )}
 
-                {/* STEP 4 */}
+                {/* STEP 4 — Date & Time */}
                 {step === 4 && (
                   <div className="flex flex-col gap-5">
                     <div>
@@ -222,9 +222,7 @@ export default function BookingForm({ onClose }: Props) {
                         </span>
                       </label>
                       <input
-                        type="date"
-                        min={todayStr}
-                        value={form.date}
+                        type="date" min={todayStr} value={form.date}
                         onChange={(e) => set("date", e.target.value)}
                         className={`w-full bg-offwhite border ${
                           error === "datetime" && !form.date ? "border-accent" : "border-black/12"
@@ -259,7 +257,7 @@ export default function BookingForm({ onClose }: Props) {
                   </div>
                 )}
 
-                {/* STEP 5 */}
+                {/* STEP 5 — Confirm */}
                 {step === 5 && (
                   <div className="flex flex-col gap-4">
                     <SummaryRow icon={<User         size={14} />} label={t(bd.summary.barber)}   value={selectedBarber ? selectedBarber.name : t(bd.anyBarber)} />
@@ -282,19 +280,28 @@ export default function BookingForm({ onClose }: Props) {
           </AnimatePresence>
         </div>
 
-        {/* Footer */}
+        {/* ── Footer — charcoal so the red button pops ── */}
         {!done && (
-          <div className="px-8 pb-7 pt-4 flex items-center justify-between gap-3 border-t border-black/6 bg-offwhite">
+          <div className="px-8 pb-7 pt-5 flex items-center justify-between gap-3 border-t border-white/8 bg-charcoal">
             {step > 1 ? (
-              <button onClick={back} className="flex items-center gap-1.5 text-sm text-soft hover:text-charcoal transition-colors">
+              <button
+                onClick={back}
+                className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"
+              >
                 <ChevronLeft size={15} />
                 {t(bd.back)}
               </button>
             ) : <div />}
+
             {step < 5 ? (
               <MagneticBtn onClick={next} label={t(bd.next)} />
             ) : (
-              <MagneticBtn onClick={submit} label={loading ? t(bd.sending) : t(bd.submit)} disabled={loading} icon={loading ? <Loader2 size={15} className="animate-spin" /> : undefined} />
+              <MagneticBtn
+                onClick={submit}
+                label={loading ? t(bd.sending) : t(bd.submit)}
+                disabled={loading}
+                icon={loading ? <Loader2 size={15} className="animate-spin" /> : undefined}
+              />
             )}
           </div>
         )}
@@ -413,7 +420,7 @@ function MagneticBtn({ onClick, label, disabled, icon }: {
     <button
       ref={ref} onClick={onClick} disabled={disabled}
       onMouseMove={move} onMouseLeave={reset}
-      className="flex items-center gap-2 px-7 py-3 rounded-full bg-accent text-white font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-accent-dark hover:shadow-[0_0_24px_rgba(209,0,0,0.45)] transition-all hover:scale-105 active:scale-95"
+      className="flex items-center gap-2 px-7 py-3 rounded-full bg-accent text-white font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-accent-dark hover:shadow-[0_0_28px_rgba(209,0,0,0.7)] transition-all hover:scale-105 active:scale-95"
     >
       {icon}
       {label}
