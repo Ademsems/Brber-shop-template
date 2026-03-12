@@ -23,14 +23,22 @@ const EMPTY: FormState = {
   barberId: "", serviceId: "", date: "", time: "",
 };
 
+// ── NEW STEP ORDER ────────────────────────────────────────────────────────────
+// 1 → Service
+// 2 → Barber
+// 3 → Date & Time
+// 4 → Personal Info
+// 5 → Confirm
+// ─────────────────────────────────────────────────────────────────────────────
+
 function validate(step: Step, form: FormState) {
-  if (step === 1) {
-    if (!form.name.trim()) return "name";
+  if (step === 1 && !form.serviceId) return "service";
+  if (step === 3 && (!form.date || !form.time)) return "datetime";
+  if (step === 4) {
+    if (!form.name.trim())  return "name";
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "email";
     if (!form.phone.trim()) return "phone";
   }
-  if (step === 3 && !form.serviceId) return "service";
-  if (step === 4 && (!form.date || !form.time)) return "datetime";
   return null;
 }
 
@@ -62,7 +70,8 @@ export default function BookingForm({ onClose }: Props) {
     setError(null);
   };
 
-  const back   = () => setStep((s) => Math.max(s - 1, 1) as Step);
+  const back = () => setStep((s) => Math.max(s - 1, 1) as Step);
+
   const submit = async () => {
     setLoading(true);
     await sendConfirmation(form);
@@ -73,10 +82,14 @@ export default function BookingForm({ onClose }: Props) {
   const selectedBarber  = SHOP.team.find((b) => b.id === form.barberId);
   const selectedService = SHOP.services.find((s) => s.id === form.serviceId);
 
-  const steps = [
-    t(bd.steps.personal), t(bd.steps.barber), t(bd.steps.service),
-    t(bd.steps.datetime), t(bd.steps.confirm),
-  ];
+  // Explicit step → label map (no longer relies on key order)
+  const stepLabels: Record<Step, string> = {
+    1: t(bd.steps.service),
+    2: t(bd.steps.barber),
+    3: t(bd.steps.datetime),
+    4: t(bd.steps.personal),
+    5: t(bd.steps.confirm),
+  };
 
   const mx       = useMotionValue(0);
   const my       = useMotionValue(0);
@@ -106,7 +119,7 @@ export default function BookingForm({ onClose }: Props) {
         exit={{    scale: 0.88, opacity: 0, y: 40 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
       >
-        {/* ── Header ── */}
+        {/* ── Header ───────────────────────────────────────────────────── */}
         <div className="relative px-8 pt-8 pb-6 border-b border-black/6 bg-offwhite">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent rounded-t-3xl" />
 
@@ -129,22 +142,20 @@ export default function BookingForm({ onClose }: Props) {
 
           {/* Step indicators */}
           <div className="flex items-center gap-1 mt-5">
-            {steps.map((_, i) => (
+            {([1,2,3,4,5] as Step[]).map((i) => (
               <div key={i}>
                 <div className={`h-1.5 rounded-full transition-all duration-500 ${
-                  i + 1 < step   ? "bg-accent w-6" :
-                  i + 1 === step ? "bg-accent w-10 shadow-[0_0_8px_rgba(209,0,0,0.5)]" :
+                  i < step  ? "bg-accent w-6" :
+                  i === step ? "bg-accent w-10 shadow-[0_0_8px_rgba(209,0,0,0.5)]" :
                   "bg-black/10 w-6"
                 }`} />
               </div>
             ))}
           </div>
-          <p className="text-xs text-soft mt-2">
-            {t(bd.steps[Object.keys(bd.steps)[step - 1] as keyof typeof bd.steps])}
-          </p>
+          <p className="text-xs text-soft mt-2">{stepLabels[step]}</p>
         </div>
 
-        {/* ── Body ── */}
+        {/* ── Body ─────────────────────────────────────────────────────── */}
         <div className="px-8 py-6 min-h-[320px] max-h-[65vh] overflow-y-auto bg-white">
           <AnimatePresence mode="wait">
             {done ? (
@@ -182,37 +193,53 @@ export default function BookingForm({ onClose }: Props) {
                 transition={{ duration: 0.25 }}
                 className="flex flex-col gap-5"
               >
-                {/* STEP 1 — Personal Info */}
+
+                {/* ── STEP 1 — Select Service ─────────────────────────── */}
                 {step === 1 && (
-                  <>
-                    <Field icon={<User  size={15} />} label={t(bd.fields.name)}  placeholder={t(bd.fields.namePh)}  value={form.name}  onChange={(v) => set("name",  v)} error={error === "name"}  errMsg={t(bd.errors.required)} />
-                    <Field icon={<Mail  size={15} />} label={t(bd.fields.email)} placeholder="name@email.com"        value={form.email} onChange={(v) => set("email", v)} error={error === "email"} errMsg={t(bd.errors.email)} type="email" />
-                    <Field icon={<Phone size={15} />} label={t(bd.fields.phone)} placeholder={t(bd.fields.phonePh)} value={form.phone} onChange={(v) => set("phone", v)} error={error === "phone"} errMsg={t(bd.errors.required)} type="tel" />
-                  </>
+                  <div className="flex flex-col gap-3">
+                    {error === "service" && (
+                      <p className="text-accent text-xs">{t(bd.errors.required)}</p>
+                    )}
+                    {SHOP.services.map((s) => (
+                      <ServiceCard
+                        key={s.id}
+                        selected={form.serviceId === s.id}
+                        onClick={() => set("serviceId", s.id)}
+                        name={s.name[lang]}
+                        desc={s.desc[lang]}
+                        duration={s.duration}
+                        price={s.price}
+                        minLabel={t(dict.services.min)}
+                      />
+                    ))}
+                  </div>
                 )}
 
-                {/* STEP 2 — Choose Barber */}
+                {/* ── STEP 2 — Choose Barber ──────────────────────────── */}
                 {step === 2 && (
                   <div className="flex flex-col gap-3">
-                    <BarberCard selected={form.barberId === ""} onClick={() => set("barberId", "")} name={t(bd.anyBarber)} role="" isAny />
+                    <BarberCard
+                      selected={form.barberId === ""}
+                      onClick={() => set("barberId", "")}
+                      name={t(bd.anyBarber)}
+                      role=""
+                      isAny
+                    />
                     {SHOP.team.map((b) => (
-                      <BarberCard key={b.id} selected={form.barberId === b.id} onClick={() => set("barberId", b.id)} name={b.name} role={b.role[lang]} image={b.image} />
+                      <BarberCard
+                        key={b.id}
+                        selected={form.barberId === b.id}
+                        onClick={() => set("barberId", b.id)}
+                        name={b.name}
+                        role={b.role[lang]}
+                        image={b.image}
+                      />
                     ))}
                   </div>
                 )}
 
-                {/* STEP 3 — Select Service */}
+                {/* ── STEP 3 — Date & Time ────────────────────────────── */}
                 {step === 3 && (
-                  <div className="flex flex-col gap-3">
-                    {error === "service" && <p className="text-accent text-xs">{t(bd.errors.required)}</p>}
-                    {SHOP.services.map((s) => (
-                      <ServiceCard key={s.id} selected={form.serviceId === s.id} onClick={() => set("serviceId", s.id)} name={s.name[lang]} desc={s.desc[lang]} duration={s.duration} price={s.price} minLabel={t(dict.services.min)} />
-                    ))}
-                  </div>
-                )}
-
-                {/* STEP 4 — Date & Time */}
-                {step === 4 && (
                   <div className="flex flex-col gap-5">
                     <div>
                       <label className="block text-xs font-semibold text-mid mb-2">
@@ -222,7 +249,9 @@ export default function BookingForm({ onClose }: Props) {
                         </span>
                       </label>
                       <input
-                        type="date" min={todayStr} value={form.date}
+                        type="date"
+                        min={todayStr}
+                        value={form.date}
                         onChange={(e) => set("date", e.target.value)}
                         className={`w-full bg-offwhite border ${
                           error === "datetime" && !form.date ? "border-accent" : "border-black/12"
@@ -257,13 +286,51 @@ export default function BookingForm({ onClose }: Props) {
                   </div>
                 )}
 
-                {/* STEP 5 — Confirm */}
+                {/* ── STEP 4 — Personal Info ──────────────────────────── */}
+                {step === 4 && (
+                  <>
+                    <Field
+                      icon={<User  size={15} />}
+                      label={t(bd.fields.name)}
+                      placeholder={t(bd.fields.namePh)}
+                      value={form.name}
+                      onChange={(v) => set("name", v)}
+                      error={error === "name"}
+                      errMsg={t(bd.errors.required)}
+                    />
+                    <Field
+                      icon={<Mail  size={15} />}
+                      label={t(bd.fields.email)}
+                      placeholder="name@email.com"
+                      value={form.email}
+                      type="email"
+                      onChange={(v) => set("email", v)}
+                      error={error === "email"}
+                      errMsg={t(bd.errors.email)}
+                    />
+                    <Field
+                      icon={<Phone size={15} />}
+                      label={t(bd.fields.phone)}
+                      placeholder={t(bd.fields.phonePh)}
+                      value={form.phone}
+                      type="tel"
+                      onChange={(v) => set("phone", v)}
+                      error={error === "phone"}
+                      errMsg={t(bd.errors.required)}
+                    />
+                  </>
+                )}
+
+                {/* ── STEP 5 — Confirm ────────────────────────────────── */}
                 {step === 5 && (
                   <div className="flex flex-col gap-4">
-                    <SummaryRow icon={<User         size={14} />} label={t(bd.summary.barber)}   value={selectedBarber ? selectedBarber.name : t(bd.anyBarber)} />
                     <SummaryRow icon={<Scissors     size={14} />} label={t(bd.summary.service)}  value={selectedService ? selectedService.name[lang] : "—"} />
+                    <SummaryRow icon={<User         size={14} />} label={t(bd.summary.barber)}   value={selectedBarber ? selectedBarber.name : t(bd.anyBarber)} />
                     <SummaryRow icon={<CalendarDays size={14} />} label={t(bd.summary.date)}     value={form.date} />
                     <SummaryRow icon={<Clock        size={14} />} label={t(bd.summary.time)}     value={form.time} />
+                    <SummaryRow icon={<User         size={14} />} label={t(bd.fields.name)}      value={form.name} />
+                    <SummaryRow icon={<Mail         size={14} />} label={t(bd.fields.email)}     value={form.email} />
+                    <SummaryRow icon={<Phone        size={14} />} label={t(bd.fields.phone)}     value={form.phone} />
                     {selectedService && (
                       <>
                         <SummaryRow icon={<Clock size={14} />} label={t(bd.summary.duration)} value={`${selectedService.duration} ${t(dict.services.min)}`} />
@@ -275,12 +342,13 @@ export default function BookingForm({ onClose }: Props) {
                     )}
                   </div>
                 )}
+
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* ── Footer — charcoal so the red button pops ── */}
+        {/* ── Footer — charcoal so red button pops ─────────────────────── */}
         {!done && (
           <div className="px-8 pb-7 pt-5 flex items-center justify-between gap-3 border-t border-white/8 bg-charcoal">
             {step > 1 ? (
