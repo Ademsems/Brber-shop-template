@@ -2,19 +2,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Fetches a Google Sheet published as CSV and returns structured shop data.
 // Google Sheet must be: File → Share → Publish to web → CSV format.
+// Columns expected: slug | name | phone | address
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ShopRow {
   slug:    string;
   name:    string;
   phone:   string;
-  address: string; // always overridden to FIXED_ADDRESS below
+  address: string;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 export const FALLBACK_PHONE   = "+421 952 049 119";
 export const FALLBACK_NAME    = "Prémiový Barber";
-export const FIXED_ADDRESS    = "Slovakia, Bratislava";
+export const FALLBACK_ADDRESS = "Slovakia";
 
 // ── CSV Parser ────────────────────────────────────────────────────────────────
 // Handles quoted fields and trailing whitespace — safe for Google Sheets output.
@@ -27,10 +28,10 @@ function parseCSV(raw: string): Record<string, string>[] {
     .map((h) => h.replace(/^"|"$/g, "").trim().toLowerCase());
 
   return lines.slice(1).map((line) => {
-    // Split on commas that are NOT inside quotes
-    const values = line
-      .match(/(".*?"|[^",]+)(?=,|$)|(?<=,|^)(?=,|$)/g)
-      ?.map((v) => v.replace(/^"|"$/g, "").trim()) ?? [];
+    const values =
+      line
+        .match(/(".*?"|[^",]+)(?=,|$)|(?<=,|^)(?=,|$)/g)
+        ?.map((v) => v.replace(/^"|"$/g, "").trim()) ?? [];
 
     return Object.fromEntries(
       headers.map((h, i) => [h, values[i] ?? ""])
@@ -47,7 +48,7 @@ export async function getShopBySlug(
     slug,
     name:    FALLBACK_NAME,
     phone:   FALLBACK_PHONE,
-    address: FIXED_ADDRESS,
+    address: FALLBACK_ADDRESS,
   };
 
   // Guard: if no CSV URL configured yet, return fallback silently
@@ -84,17 +85,20 @@ export async function getShopBySlug(
       return fallback;
     }
 
-    // Resolve phone — if empty in sheet, use fallback
-    const phone =
-      match["phone"]?.trim().length > 0
-        ? match["phone"].trim()
-        : FALLBACK_PHONE;
+    // Resolve each field — fall back to defaults if empty in the sheet
+    const phone = match["phone"]?.trim().length > 0
+      ? match["phone"].trim()
+      : FALLBACK_PHONE;
+
+    const address = match["address"]?.trim().length > 0
+      ? match["address"].trim()
+      : FALLBACK_ADDRESS;
 
     return {
       slug:    match["slug"]?.trim()  || slug,
       name:    match["name"]?.trim()  || FALLBACK_NAME,
       phone,
-      address: FIXED_ADDRESS, // always hardcoded regardless of sheet
+      address,
     };
   } catch (err) {
     console.error("[csvFetcher] Unexpected error:", err);
