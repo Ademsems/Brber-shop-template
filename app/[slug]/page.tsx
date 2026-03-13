@@ -25,10 +25,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const shop = await getShopBySlug(CSV_URL, params.slug);
   return {
     title:       `${shop.name} | Premium Barbershop`,
-    description: `Book your appointment at ${shop.name} — Slovakia, Bratislava.`,
+    description: `Book your appointment at ${shop.name} — ${shop.address}.`,
     openGraph: {
       title:       `${shop.name} | Premium Barbershop`,
-      description: `Premium barber services in Slovakia, Bratislava.`,
+      description: `Premium barber services in ${shop.address}.`,
       type:        "website",
     },
   };
@@ -46,9 +46,10 @@ export default async function SlugPage({ params }: PageProps) {
         dynamicShop={{
           name:    shop.name,
           phone:   shop.phone,
-          address: "Slovakia, Bratislava", // Hardcoded per your instruction
+          address: shop.address,
         }}
       />
     </I18nProvider>
   );
+
 }
